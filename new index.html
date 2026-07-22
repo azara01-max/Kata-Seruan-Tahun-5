@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KATA SERU & AYAT SERUAN - Permainan Interaktif</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-main: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Top Header & Scoreboard */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 20px;
+            border: 2px solid #334155;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .title-area h1 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .score-board {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #0f172a;
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .score-val {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #38bdf8;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .btn-score {
+            width: 35px;
+            height: 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-score:active {
+            transform: scale(0.9);
+        }
+
+        .btn-plus { background: var(--success); color: white; }
+        .btn-minus { background: var(--danger); color: white; }
+
+        .btn-reset {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        /* Views Container */
+        main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        /* GRID VIEW */
+        #grid-view {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        .instructions {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            color: #cbd5e1;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+        }
+
+        .card-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: 3px solid #6366f1;
+            border-radius: 20px;
+            height: 110px;
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-btn:hover:not(.disabled) {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+        }
+
+        .card-btn.disabled {
+            background: #334155;
+            border-color: #475569;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .card-btn.disabled::after {
+            content: "SELESAI";
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            font-size: 0.8rem;
+            color: var(--danger);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* QUESTION VIEW */
+        #question-view {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 25px;
+            border: 3px solid var(--secondary);
+            padding: 30px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 15px;
+        }
+
+        .q-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .timer-box {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: #0f172a;
+            padding: 5px 25px;
+            border-radius: 50px;
+            border: 3px solid var(--accent);
+            color: var(--accent);
+            min-width: 100px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .timer-warning {
+            border-color: var(--danger);
+            color: var(--danger);
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .q-text {
+            font-size: 2rem;
+            line-height: 1.4;
+            font-weight: 600;
+            margin: 15px 0;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .options-grid.three-opts {
+            grid-template-columns: 1fr;
+        }
+
+        .opt-btn {
+            background: #334155;
+            border: 2px solid #475569;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background: var(--primary);
+            border-color: #818cf8;
+            transform: scale(1.01);
+        }
+
+        .opt-btn:disabled {
+            cursor: default;
+        }
+
+        .opt-btn.correct {
+            background: var(--success) !important;
+            border-color: #34d399 !important;
+            color: white;
+            animation: bounce 0.5s;
+        }
+
+        .opt-btn.wrong {
+            background: var(--danger) !important;
+            border-color: #f87171 !important;
+            color: white;
+            animation: shake 0.4s;
+        }
+
+        /* FEEDBACK AREA */
+        #feedback-area {
+            display: none;
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #334155;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .fb-msg {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .fb-msg.correct { color: var(--success); }
+        .fb-msg.wrong { color: var(--danger); }
+        .fb-msg.timeout { color: var(--accent); }
+
+        .fb-explanation {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .btn-back {
+            background: var(--secondary);
+            color: #0f172a;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-back:hover {
+            background: #22d3ee;
+            transform: scale(1.05);
+        }
+
+        /* Keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.08); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        /* Responsive design for Laptop/Projector */
+        @media (max-width: 768px) {
+            .grid-container { grid-template-columns: repeat(4, 1fr); }
+            .options-grid { grid-template-columns: 1fr; }
+            .q-text { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Scoreboard -->
+    <header>
+        <div class="title-area">
+            <h1>KATA SERU & AYAT SERUAN</h1>
+        </div>
+        <div class="score-board">
+            <span class="score-title">MARKAH:</span>
+            <button class="btn-score btn-minus" onclick="adjustScore(-1)">-</button>
+            <span id="score-display" class="score-val">0</span>
+            <button class="btn-score btn-plus" onclick="adjustScore(1)">+</button>
+        </div>
+        <button class="btn-reset" onclick="resetGame()">Tetapkan Semula Permainan</button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- GRID VIEW (20 Cards) -->
+        <div id="grid-view">
+            <p class="instructions">Pilih nombor kad misteri anda!</p>
+            <div class="grid-container" id="grid-container">
+                <!-- Generated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- QUESTION VIEW -->
+        <div id="question-view">
+            <div class="q-header">
+                <span id="q-number-display" class="q-number">SOALAN 1</span>
+                <div id="timer-display" class="timer-box">10</div>
+            </div>
+
+            <div id="q-text-display" class="q-text">
+                ____, ciptaan kamu telah mendapat pujian daripada pihak atasan!
+            </div>
+
+            <div id="options-container" class="options-grid">
+                <!-- Options generated dynamically -->
+            </div>
+
+            <div id="feedback-area">
+                <div id="fb-message" class="fb-msg"></div>
+                <div id="fb-explanation" class="fb-explanation"></div>
+                <button class="btn-back" onclick="showGridView()">Kembali ke Papan Nombor</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Database Soalan
+        const questionsData = [
+            {
+                id: 1,
+                question: "____, ciptaan kamu telah mendapat pujian daripada pihak atasan!",
+                options: ["A. Aduhai", "B. Hai", "C. Syabas", "D. Nah"],
+                answer: 2, // Index C
+                explanation: "Kata seru “syabas” digunakan untuk menyatakan pujian atau tahniah terhadap kejayaan seseorang."
+            },
+            {
+                id: 2,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Wah, berseri-seri wajah pengantin baru!", "B. Oh, berseri-seri wajah pengantin baru!", "C. Wahai, berseri-seri wajah pengantin baru!"],
+                answer: 0, // Index A
+                explanation: "Kata seru “wah” digunakan untuk menyatakan rasa kagum terhadap sesuatu yang menarik atau mengagumkan."
+            },
+            {
+                id: 3,
+                question: "___, engkau mesti meminta maaf daripada orang tua itu!",
+                options: ["A. Eh", "B. Wah", "C. Nah", "D. Oh"],
+                answer: 0, // Index A
+                explanation: "Kata seru “eh” boleh digunakan untuk menarik perhatian atau menunjukkan rasa terkejut sebelum memberikan teguran."
+            },
+            {
+                id: 4,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Amboi, besarnya ikan yang ayah pancing!", "B. Nah, besarnya ikan yang ayah pancing!", "C. Ah, besarnya ikan yang ayah pancing!"],
+                answer: 0, // Index A
+                explanation: "Kata seru “amboi” digunakan untuk menyatakan rasa kagum, hairan atau terkejut."
+            },
+            {
+                id: 5,
+                question: "___, ambil gaji kamu dan mulai hari ini kamu telah dipecat!",
+                options: ["A. Hai", "B. Amboi", "C. Aduh", "D. Nah"],
+                answer: 3, // Index D
+                explanation: "Kata seru “nah” digunakan ketika menghulurkan atau memberikan sesuatu kepada seseorang."
+            },
+            {
+                id: 6,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Aduhai, malangnya nasib aku!", "B. Wahai, malangnya nasib aku!", "C. Amboi, malangnya nasib aku!"],
+                answer: 0, // Index A
+                explanation: "Kata seru “aduhai” digunakan untuk menyatakan rasa sedih, kecewa atau dukacita."
+            },
+            {
+                id: 7,
+                question: "___, berani engkau calarkan kereta aku!",
+                options: ["A. Cis", "B. Ah", "C. Eh", "D. Aduh"],
+                answer: 0, // Index A
+                explanation: "Kata seru “cis” digunakan untuk menyatakan rasa marah, benci atau jijik."
+            },
+            {
+                id: 8,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Wah, awak terpilih ke pusingan seterusnya!", "B. Tahniah, awak terpilih ke pusingan seterusnya!", "C. Cis, awak terpilih ke pusingan seterusnya!"],
+                answer: 1, // Index B
+                explanation: "Kata seru “tahniah” digunakan untuk mengucapkan selamat atas kejayaan seseorang."
+            },
+            {
+                id: 9,
+                question: "___, cepatnya kau makan roti canai itu!",
+                options: ["A. Ah", "B. Amboi", "C. Wahai", "D. Aduhai"],
+                answer: 1, // Index B
+                explanation: "Kata seru “amboi” digunakan untuk menunjukkan rasa hairan, terkejut atau kagum."
+            },
+            {
+                id: 10,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Oh, jangan suka memberikan alasan yang tidak munasabah!", "B. Eh, jangan suka memberikan alasan yang tidak munasabah!", "C. Ah, jangan suka memberikan alasan yang tidak munasabah!"],
+                answer: 2, // Index C
+                explanation: "Kata seru “ah” digunakan untuk menyatakan rasa tidak suka, penolakan, bantahan atau tidak bersetuju."
+            },
+            {
+                id: 11,
+                question: "___, rupanya engkau yang menyembunyikan kasut saya!",
+                options: ["A. Oh", "B. Eh", "C. Hai", "D. Nah"],
+                answer: 1, // Index B
+                explanation: "Kata seru “eh” digunakan untuk menyatakan rasa terkejut apabila mengetahui sesuatu."
+            },
+            {
+                id: 12,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Nah, sakit benar rasa hati ini apabila teringatkan dia!", "B. Wahai, sakit benar rasa hati ini apabila teringatkan dia!", "C. Aduh, sakit benar rasa hati ini apabila teringatkan dia!"],
+                answer: 2, // Index C
+                explanation: "Kata seru “aduh” digunakan untuk menyatakan rasa sakit, kecewa atau kesusahan."
+            },
+            {
+                id: 13,
+                question: "____, cantiknya kain tudung yang dijual di kedai itu!",
+                options: ["A. Syabas", "B. Aduhai", "C. Wah", "D. Eh"],
+                answer: 2, // Index C
+                explanation: "Kata seru “wah” digunakan untuk menyatakan rasa kagum terhadap sesuatu yang cantik atau menarik."
+            },
+            {
+                id: 14,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Eh, awak sudah balik dari luar negara!", "B. Cis, awak sudah balik dari luar negara!", "C. Ah, awak sudah balik dari luar negara!"],
+                answer: 0, // Index A
+                explanation: "Kata seru “eh” digunakan untuk menyatakan rasa terkejut atau hairan apabila melihat seseorang secara tidak dijangka."
+            },
+            {
+                id: 15,
+                question: "“___, rakyat Padang Cendana sekalian!” titah Sultan Muzaffar Syah.",
+                options: ["A. Aduhai", "B. Amboi", "C. Hai", "D. Wahai"],
+                answer: 3, // Index D
+                explanation: "Kata seru “wahai” digunakan untuk menarik perhatian atau menyapa seseorang atau sekumpulan orang."
+            },
+            {
+                id: 16,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Wah, hasil projek Sains kamu sangat hebat!", "B. Amboi, hasil projek Sains kamu sangat hebat!", "C. Syabas, hasil projek Sains kamu sangat hebat!"],
+                answer: 2, // Index C
+                explanation: "Kata seru “syabas” digunakan untuk memberikan pujian terhadap pencapaian atau hasil kerja yang baik."
+            },
+            {
+                id: 17,
+                question: "___, sedap sungguh nasi dagang ini!",
+                options: ["A. Wah", "B. Aduhai", "C. Hai", "D. Eh"],
+                answer: 0, // Index A
+                explanation: "Kata seru “wah” digunakan untuk menyatakan rasa kagum atau gembira terhadap sesuatu."
+            },
+            {
+                id: 18,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Aduhai anak, sentiasalah berbuat baik dengan orang lain!", "B. Wahai anak, sentiasalah berbuat baik dengan orang lain!", "C. Hai anak, sentiasalah berbuat baik dengan orang lain!"],
+                answer: 1, // Index B
+                explanation: "Kata seru “wahai” digunakan untuk menarik perhatian seseorang sebelum menyampaikan pesanan atau nasihat."
+            },
+            {
+                id: 19,
+                question: "___, aku seperti pernah melihat gadis bertudung itu!",
+                options: ["A. Oh", "B. Nah", "C. Cis", "D. Eh"],
+                answer: 3, // Index D
+                explanation: "Kata seru “eh” digunakan untuk menyatakan rasa terkejut, hairan atau baru menyedari sesuatu."
+            },
+            {
+                id: 20,
+                question: "Pilih ayat yang betul dari segi struktur ayat serta penggunaan kata serunya.",
+                options: ["A. Ah, dia rupanya yang mengganggu kita selama ini!", "B. Aduhai, dia rupanya yang mengganggu kita selama ini!", "C. Cis, dia rupanya yang mengganggu kita selama ini!"],
+                answer: 2, // Index C
+                explanation: "Kata seru “cis” digunakan untuk menunjukkan rasa marah, benci atau geram terhadap perbuatan seseorang."
+            }
+        ];
+
+        // System States
+        let completedQuestions = new Set();
+        let currentScore = 0;
+        let currentQIndex = null;
+        let timer = null;
+        let timeLeft = 10;
+        let audioCtx = null;
+
+        // WEB AUDIO API SYNTHESIZER (Tanpa Fail Luaran)
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'tick') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'tick-warning') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'correct') {
+                // Melodi Kejayaan (C5 ke G5)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'wrong') {
+                // Bunyi Salah
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.setValueAtTime(180, now + 0.15); // Low
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'timeout') {
+                // Bunyi Masa Tamat
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // Initialize UI Elements
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGrid();
+        });
+
+        function renderGrid() {
+            const gridContainer = document.getElementById('grid-container');
+            gridContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 20; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'card-btn';
+                btn.innerText = i;
+                
+                if (completedQuestions.has(i)) {
+                    btn.classList.add('disabled');
+                    btn.disabled = true;
+                } else {
+                    btn.onclick = () => {
+                        playSound('click');
+                        openQuestion(i - 1);
+                    };
+                }
+                gridContainer.appendChild(btn);
+            }
+        }
+
+        function openQuestion(index) {
+            currentQIndex = index;
+            const q = questionsData[index];
+
+            // Hide Grid, Show Question
+            document.getElementById('grid-view').style.display = 'none';
+            document.getElementById('question-view').style.display = 'flex';
+            document.getElementById('feedback-area').style.display = 'none';
+
+            // Set Content
+            document.getElementById('q-number-display').innerText = `SOALAN ${q.id}`;
+            document.getElementById('q-text-display').innerText = q.question;
+
+            // Render Options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            if(q.options.length === 3) {
+                optionsContainer.classList.add('three-opts');
+            } else {
+                optionsContainer.classList.remove('three-opts');
+            }
+
+            q.options.forEach((optText, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerText = optText;
+                btn.onclick = () => handleAnswer(optIndex);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Start Timer
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = 15;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.innerText = timeLeft;
+            timerDisplay.classList.remove('timer-warning');
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+
+                if (timeLeft <= 3 && timeLeft > 0) {
+                    timerDisplay.classList.add('timer-warning');
+                    playSound('tick-warning');
+                } else if (timeLeft > 0) {
+                    playSound('tick');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timer);
+        }
+
+        function lockOptions() {
+            const btns = document.querySelectorAll('.opt-btn');
+            btns.forEach(btn => btn.disabled = true);
+        }
+
+        function handleAnswer(selectedIndex) {
+            stopTimer();
+            lockOptions();
+            
+            const q = questionsData[currentQIndex];
+            const btns = document.querySelectorAll('.opt-btn');
+            const feedbackArea = document.getElementById('feedback-area');
+            const fbMessage = document.getElementById('fb-message');
+            const fbExplanation = document.getElementById('fb-explanation');
+
+            completedQuestions.add(q.id);
+
+            if (selectedIndex === q.answer) {
+                // Correct Answer
+                btns[selectedIndex].classList.add('correct');
+                playSound('correct');
+                fbMessage.className = 'fb-msg correct';
+                fbMessage.innerText = '✔ TAHNIAH! JAWAPAN ANDA BETUL!';
+                adjustScore(1);
+            } else {
+                // Wrong Answer
+                btns[selectedIndex].classList.add('wrong');
+                btns[q.answer].classList.add('correct'); // Highlight correct one
+                playSound('wrong');
+                fbMessage.className = 'fb-msg wrong';
+                fbMessage.innerText = '✖ JAWAPAN BELUM TEPAT!';
+            }
+
+            fbExplanation.innerText = `Penerangan: ${q.explanation}`;
+            feedbackArea.style.display = 'block';
+        }
+
+        function handleTimeout() {
+            lockOptions();
+            playSound('timeout');
+
+            const q = questionsData[currentQIndex];
+            const btns = document.querySelectorAll('.opt-btn');
+            const feedbackArea = document.getElementById('feedback-area');
+            const fbMessage = document.getElementById('fb-message');
+            const fbExplanation = document.getElementById('fb-explanation');
+
+            completedQuestions.add(q.id);
+
+            // Highlight correct answer
+            btns[q.answer].classList.add('correct');
+
+            fbMessage.className = 'fb-msg timeout';
+            fbMessage.innerText = '⏰ MASA TAMAT!';
+            fbExplanation.innerText = `Penerangan: ${q.explanation}`;
+            feedbackArea.style.display = 'block';
+        }
+
+        function showGridView() {
+            playSound('click');
+            document.getElementById('question-view').style.display = 'none';
+            document.getElementById('grid-view').style.display = 'block';
+            renderGrid();
+        }
+
+        function adjustScore(amount) {
+            currentScore += amount;
+            if (currentScore < 0) currentScore = 0; // Elak markah negatif
+            document.getElementById('score-display').innerText = currentScore;
+        }
+
+        function resetGame() {
+            if (confirm("Adakah anda pasti ingin menetapkan semula keseluruhan permainan dan markah?")) {
+                playSound('click');
+                stopTimer();
+                completedQuestions.clear();
+                currentScore = 0;
+                document.getElementById('score-display').innerText = currentScore;
+                showGridView();
+            }
+        }
+    </script>
+</body>
+</html>
